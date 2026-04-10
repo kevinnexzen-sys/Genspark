@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI CEO Production v8</title>
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <style>
+    :root{--bg:#020617;--panel:#0b1220;--line:#1f2937;--text:#e5e7eb;--muted:#94a3b8;--blue:#2563eb;--violet:#7c3aed;--green:#10b981;--amber:#f59e0b;--red:#ef4444}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(180deg,#020617,#071425);color:var(--text)}
+    header{position:sticky;top:0;z-index:8;background:rgba(2,6,23,.92);backdrop-filter:blur(8px);padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .brand{font-size:18px;font-weight:800}.small{font-size:12px}.muted{color:var(--muted)} .pill{background:#0f172a;padding:7px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px}
+    main{max-width:1500px;margin:auto;padding:18px}.grid{display:grid;gap:16px}.g2{grid-template-columns:1.35fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)} @media(max-width:1100px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    .card{background:rgba(11,18,32,.95);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    h2,h3{margin:0 0 10px 0} .row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+    input,select,textarea,button{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0f172a;color:var(--text);font-size:14px}
+    textarea{min-height:100px;resize:vertical} button{border:none;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--blue),#1d4ed8)} button.alt{background:linear-gradient(135deg,var(--violet),#5b21b6)} button.ghost{background:#0f172a;border:1px solid var(--line)} button.warn{background:linear-gradient(135deg,#f59e0b,#b45309)} button.red{background:linear-gradient(135deg,#dc2626,#991b1b)}
+    nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.navbtn{width:auto;background:#0f172a;border:1px solid var(--line)} .navbtn.active{background:linear-gradient(135deg,var(--blue),#1d4ed8)}
+    .tab{display:none}.tab.active{display:block}.stat{font-size:28px;font-weight:800}.ok{color:var(--green)}.warnText{color:var(--amber)}.bad{color:var(--red)}
+    table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{color:var(--muted)}
+    #log{height:180px;overflow:auto;background:#020617;border:1px solid var(--line);border-radius:14px;padding:12px;font-family:ui-monospace,monospace;font-size:12px}
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.85);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}.dialog{max-width:430px;width:100%}
+    #voiceDock{position:fixed;right:18px;bottom:18px;width:290px;display:none;z-index:9}.mic.live{background:linear-gradient(135deg,#dc2626,#7f1d1d)}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:1100px){.split{grid-template-columns:1fr}}
+    pre{white-space:pre-wrap;word-break:break-word;background:#020617;padding:12px;border-radius:12px;border:1px solid var(--line)}
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">👑 AI CEO Production v8</div>
+    <div class="small muted">Heartbeat · hybrid providers · learning graph · queueing · devices · approvals</div>
+  </div>
+  <div class="row" style="flex:0 0 auto;gap:8px;align-items:center">
+    <div id="userPill" class="pill">Guest</div>
+    <div id="providerPill" class="pill">Provider: -</div>
+    <button class="ghost" style="width:auto" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div id="authOverlay" class="overlay" style="display:none">
+  <div class="dialog card">
+    <div id="setupBox" style="display:none">
+      <h2>First-time secure setup</h2>
+      <p class="muted small">Create the administrator account first. Password must be at least 12 characters.</p>
+      <input id="setupUser" placeholder="Admin username" value="admin">
+      <input id="setupPass" type="password" placeholder="Strong password">
+      <button onclick="bootstrapAdmin()">Create admin</button>
+    </div>
+    <div id="loginBox" style="display:none">
+      <h2>Sign in</h2>
+      <input id="loginUser" placeholder="Username">
+      <input id="loginPass" type="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <nav>
+    <button class="navbtn active" onclick="showTab('home',this)">Home</button>
+    <button class="navbtn" onclick="showTab('tasks',this)">Tasks</button>
+    <button class="navbtn" onclick="showTab('preview',this)">Preview</button>
+    <button class="navbtn" onclick="showTab('approvals',this)">Approvals</button>
+    <button class="navbtn" onclick="showTab('projects',this)">Projects</button>
+    <button class="navbtn" onclick="showTab('agents',this)">Agents</button>
+    <button class="navbtn" onclick="showTab('skills',this)">Skills</button>
+    <button class="navbtn" onclick="showTab('learning',this)">Learning</button>
+    <button class="navbtn" onclick="showTab('devices',this)">Devices</button>
+    <button class="navbtn" onclick="showTab('settings',this)">Settings</button>
+  </nav>
+
+  <section id="tab-home" class="tab active">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Command center</h2>
+        <div class="row">
+          <input id="cmd" placeholder="Tell the CEO what to do, e.g. wake PC and queue estimate task">
+          <button class="alt" style="max-width:90px" onclick="toggleMic()">🎤</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button onclick="sendCmd()">Run command</button>
+          <button class="ghost" onclick="refreshAll()">Refresh all</button>
+          <button class="ghost" onclick="sendSearchToSkill()">Search → Skill</button>
+        </div>
+        <div style="margin-top:14px"><div class="small muted">Activity log</div><div id="log"></div></div>
+      </div>
+      <div class="grid">
+        <div class="grid g4">
+          <div class="card"><div class="small muted">Completed</div><div id="statTasks" class="stat ok">0</div></div>
+          <div class="card"><div class="small muted">Approvals</div><div id="statApprovals" class="stat warnText">0</div></div>
+          <div class="card"><div class="small muted">Skills</div><div id="statSkills" class="stat">0</div></div>
+          <div class="card"><div class="small muted">Devices online</div><div id="statDevices" class="stat">0</div></div>
+        </div>
+        <div class="card"><div class="small muted">CEO heartbeat</div><div id="hbText" class="stat">Idle</div></div>
+        <div class="card"><h3>Mandatory capability tracker</h3><div id="mandatoryList" class="small muted"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-tasks" class="tab"><div class="card"><h2>Queued + active tasks</h2><div style="overflow:auto"><table><thead><tr><th>Task</th><th>Target</th><th>Agent</th><th>Status</th><th>Score</th><th>Preview</th></tr></thead><tbody id="tasksBody"></tbody></table></div></div></section>
+  <section id="tab-preview" class="tab"><div class="card"><h2>Side-by-side preview</h2><div class="split"><div><select id="previewTaskSelect" onchange="loadPreview()"></select><div class="small muted" style="margin:8px 0">Planned output</div><pre id="previewPlan">Select a task</pre></div><div><div class="small muted" style="margin:8px 0">Execution result</div><pre id="previewResult">Result will appear here</pre></div></div></div></section>
+  <section id="tab-approvals" class="tab"><div class="card"><h2>Approvals queue</h2><div id="approvalsList" class="grid"></div></div></section>
+  <section id="tab-projects" class="tab"><div class="card"><h2>Projects + knowledge / instructions</h2><div class="row"><input id="projName" placeholder="Project name"><input id="projInst" placeholder="Instructions"><button onclick="addProject()">Add project</button></div><div id="projectsList" class="grid" style="margin-top:14px"></div></div></section>
+  <section id="tab-agents" class="tab"><div class="card"><h2>Dynamic subagents</h2><div class="row"><input id="agentName" placeholder="Agent name"><input id="agentRole" placeholder="Role"><input id="agentSkills" placeholder="Comma separated skills"><button onclick="addAgent()">Spawn</button></div><div id="agentsList" class="grid" style="margin-top:14px"></div></div></section>
+  <section id="tab-skills" class="tab"><div class="grid g2"><div class="card"><h2>Persistent skills</h2><div class="row"><input id="skillName" placeholder="Skill name"><input id="skillType" placeholder="Skill type" value="workflow"></div><textarea id="skillDesc" placeholder="Description"></textarea><textarea id="skillDef" placeholder='JSON definition, e.g. {"steps":["search","summarize"]}'></textarea><button onclick="addSkill()">Create skill</button><div id="skillsList" class="grid" style="margin-top:14px"></div></div><div class="card"><h2>Automation suggestions</h2><div id="suggestionsList" class="grid"></div></div></div></section>
+  <section id="tab-learning" class="tab"><div class="grid g2"><div class="card"><h2>Learning graph</h2><pre id="graphBox">Loading…</pre></div><div class="card"><h2>Watch / search / automation events</h2><textarea id="learnContent" placeholder="Manual event content for testing or quick capture"></textarea><div class="row"><select id="learnType"><option value="search">search</option><option value="workflow">workflow</option><option value="active_window">active_window</option><option value="whatsapp">whatsapp</option></select><input id="learnDevice" placeholder="Source device" value="dashboard"></div><button onclick="sendLearningEvent()">Record event</button></div></div></section>
+  <section id="tab-devices" class="tab"><div class="grid g2"><div class="card"><h2>Devices + remote control</h2><div class="row"><input id="deviceName" placeholder="Device name"><select id="deviceType"><option value="desktop">desktop</option><option value="phone">phone</option><option value="cloud">cloud</option></select></div><div class="row"><input id="wolMac" placeholder="WOL MAC"><input id="relayUrl" placeholder="Cloud relay URL"></div><div class="row"><input id="smartPlugUrl" placeholder="Smart plug URL"><input id="amtHost" placeholder="Intel AMT host"></div><button onclick="addDevice()">Register device</button><div id="devicesList" class="grid" style="margin-top:14px"></div></div><div class="card"><h2>Worker + wake status</h2><div class="small muted">Desktop worker is listen-only for voice. Mobile is allowed to speak.</div><pre id="providerBox">Loading provider status…</pre></div></div></section>
+  <section id="tab-settings" class="tab"><div class="grid g2"><div class="card"><h2>Dashboard-first settings</h2><div class="row"><select id="prov"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="google">Google</option><option value="groq">Groq</option><option value="ollama">Ollama / Local</option></select><input id="model" placeholder="Primary model"></div><div class="row"><select id="secondaryProv"><option value="anthropic">Anthropic</option><option value="google">Google</option><option value="groq">Groq</option><option value="openai">OpenAI</option><option value="ollama">Ollama / Local</option></select><select id="tertiaryProv"><option value="google">Google</option><option value="anthropic">Anthropic</option><option value="groq">Groq</option><option value="openai">OpenAI</option><option value="ollama">Ollama / Local</option></select></div><div class="row"><select id="execMode"><option value="balanced">balanced</option><option value="fast">fast</option><option value="privacy">privacy</option></select><input id="localModel" placeholder="Local model"></div><div class="row"><input id="apiKey" type="password" placeholder="Primary API key"><input id="openaiBase" placeholder="OpenAI-compatible base URL"></div><div class="row"><input id="localUrl" placeholder="Local URL"><input id="allowedOrigins" placeholder="Allowed origins"></div><div class="row"><label><input id="offline" type="checkbox" style="width:auto"> Offline mode</label><label><input id="autoApprove" type="checkbox" style="width:auto"> Auto approve</label><label><input id="dockerEnabled" type="checkbox" style="width:auto"> Docker</label></div><button onclick="saveSettings()">Save settings</button></div><div class="card"><h2>Google / WhatsApp / Supabase / wake settings</h2><input id="waToken" type="password" placeholder="WhatsApp token"><input id="waPhone" placeholder="WhatsApp phone ID"><input id="tgToken" type="password" placeholder="Telegram token"><div class="row"><input id="emailUser" placeholder="Email user"><input id="emailPass" type="password" placeholder="Email app password"></div><div class="row"><input id="emailHost" placeholder="SMTP host"><input id="emailPort" placeholder="SMTP port"></div><textarea id="googleJson" placeholder="Google service account JSON"></textarea><div class="row"><input id="calendarId" placeholder="Calendar ID"><input id="supabaseUrl" placeholder="Supabase URL"></div><div class="row"><input id="supabaseKey" type="password" placeholder="Supabase service key"><input id="cloudRelayUrl" placeholder="Cloud relay URL"></div><div class="row"><input id="phoneWakeSecret" type="password" placeholder="Phone wake secret"><input id="testTo" placeholder="Recipient or target"></div><div class="row"><button class="ghost" onclick="testIntegration('wa')">Test WhatsApp</button><button class="ghost" onclick="testIntegration('email')">Test Email</button></div><div class="row"><button class="ghost" onclick="testIntegration('sheets')">Test Sheets</button><button class="ghost" onclick="testIntegration('calendar')">Test Calendar</button></div></div></div></section>
+</main>
+
+<div id="voiceDock" class="card"><div class="small muted">Voice mode</div><button id="micBtn" class="alt" onclick="toggleMic()">🎤 Start listen mode</button><div id="voiceStatus" class="small muted" style="margin-top:8px">Idle</div></div>
+
+<script>
+let ws=null, rec=null, listening=false, audioCtx=null, lastTasks=[];
+const isMobile=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const mandatory=[
+  ['CEO heartbeat','Heartbeat loop + dashboard status'],['offline/online hybrid','Provider switch + offline mode'],['multi-provider switching','Primary/secondary/tertiary'],['watch-to-learn','Worker + screen capture + learning events'],['search-to-skill','Dashboard button + skill generator'],['suggest automations','Automation suggestions tab'],['self-improving loop','Critic + suggestion generation'],['persistent skills','Versioned skills'],['merged phone + desktop learning graph','Learning graph endpoint'],['Android standalone app','Android wrapper files included'],['mobile voice speaking','TTS only on mobile UI'],['desktop listen-only voice','Desktop mic input, no auto TTS'],['remote PC wake/control','Wake/restart/shutdown controls'],['smart plug fallback','Device smart plug fields'],['side-by-side preview','Preview tab'],['project knowledge/instructions views','Projects tab'],['WhatsApp monitoring + command path','Webhook + dashboard settings'],['Google Sheets/Email/Calendar','Integration tests'],['dashboard-first settings','Settings tab'],['dynamic subagents','Auto subagent creation'],['phone command wakes PC','WhatsApp/mobile path + wake controls'],['queued tasks wait for worker','Queued target device tasks'],['task resumes after PC online','Heartbeat queue resume'],['Wake-on-LAN','Device WOL'],['cloud relay wake','Cloud relay URL'],['smart plug integration','Smart plug URL/token fields'],['Intel AMT path','AMT host fields'],['restart','Device control'],['shutdown','Device control'],['online detection','Heartbeat + provider status'],['wake retry logic','Worker/device wake chain']
+];
+const $=id=>document.getElementById(id);
+function log(msg){$('log').innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;$('log').scrollTop=$('log').scrollHeight;}
+function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));$('tab-'+id).classList.add('active');document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');refreshSection(id)}
+async function api(url,opts={}){const cfg={credentials:'include',headers:{'Content-Type':'application/json'},...opts};if(cfg.body && typeof cfg.body!=='string') cfg.body=JSON.stringify(cfg.body);const r=await fetch(url,cfg);if(!r.ok){let t='Request failed';try{const j=await r.json();t=j.detail||JSON.stringify(j)}catch{t=await r.text()}throw new Error(t)}const ct=r.headers.get('content-type')||'';return ct.includes('application/json')?r.json():r.text()}
+async function loadAuth(){const s=await api('/api/auth/status',{headers:{}}).catch(()=>null);if(!s)return;$('authOverlay').style.display=s.authenticated?'none':'flex';$('setupBox').style.display=s.setup_required?'block':'none';$('loginBox').style.display=(!s.setup_required&&!s.authenticated)?'block':'none';$('userPill').textContent=s.authenticated?`👤 ${s.username}`:'Guest';if(s.authenticated){$('voiceDock').style.display='block';connectWS();renderMandatory();refreshAll();}}
+async function bootstrapAdmin(){try{await api('/api/auth/bootstrap',{method:'POST',body:{username:$('setupUser').value,password:$('setupPass').value}});loadAuth();log('Admin created')}catch(e){alert(e.message)}}
+async function login(){try{await api('/api/auth/login',{method:'POST',body:{username:$('loginUser').value,password:$('loginPass').value}});loadAuth();log('Logged in')}catch(e){alert(e.message)}}
+async function logout(){try{await api('/api/auth/logout',{method:'POST',body:{}})}catch{}location.reload()}
+function connectWS(){if(ws) return;ws=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/ws');ws.onopen=()=>log('WebSocket connected');ws.onmessage=e=>{const d=JSON.parse(e.data);if(d.type==='resp'){log('CEO: '+(d.data.thought||d.data.status));$('hbText').textContent=d.data.status;if(isMobile) speak(d.data.thought||d.data.status);refreshAll()} if(d.type==='hb'){$('hbText').textContent='Alive '+d.time; if(d.resumed?.length) log('Resumed tasks: '+d.resumed.length)} if(d.type==='task_update'){refreshAll()}};ws.onclose=()=>{ws=null;setTimeout(connectWS,2000)}}
+async function sendCmd(){const cmd=$('cmd').value.trim();if(!cmd) return;log('You: '+cmd);$('hbText').textContent='Thinking';const body={cmd,source_channel:isMobile?'mobile':'dashboard'};if(ws&&ws.readyState===1){ws.send(JSON.stringify(body))}else{const r=await api('/api/command',{method:'POST',body});log('CEO: '+(r.thought||r.status));refreshAll()}$('cmd').value=''}
+$('cmd').addEventListener('keypress',e=>{if(e.key==='Enter')sendCmd()});
+function renderMandatory(){$('mandatoryList').innerHTML=mandatory.map(([a,b])=>`<div>✅ <b>${a}</b> — ${b}</div>`).join('')}
+async function refreshAll(){await Promise.all(['tasks','approvals','projects','agents','skills','learning','devices','settings'].map(refreshSection));}
+async function refreshSection(name){try{
+ if(name==='tasks'){const rows=await api('/api/tasks',{headers:{}}); lastTasks=rows; $('tasksBody').innerHTML=rows.map(t=>`<tr><td>${t.d}</td><td>${t.td||'-'}</td><td>${t.a||'CEO'}</td><td>${t.s}</td><td>${t.sc}</td><td><button class='ghost' onclick="selectPreview('${t.id}')">Open</button></td></tr>`).join(''); $('statTasks').textContent=rows.filter(t=>t.s==='completed').length; $('previewTaskSelect').innerHTML=['<option value="">Select task</option>',...rows.map(t=>`<option value="${t.id}">${t.d.slice(0,70)}</option>`)].join('');}
+ if(name==='approvals'){const rows=await api('/api/approvals',{headers:{}}); $('approvalsList').innerHTML=rows.length?rows.map(x=>`<div class='card'><b>${x.d}</b><div class='small muted'>Task ${x.tid}</div><button style='margin-top:10px' onclick="approveTask('${x.tid}')">Approve and run</button></div>`).join(''):'<div class="small muted">No pending approvals.</div>'; $('statApprovals').textContent=rows.length;}
+ if(name==='projects'){const rows=await api('/api/projects',{headers:{}}); $('projectsList').innerHTML=rows.map(x=>`<div class='card'><b>${x.n}</b><div class='small muted'>${x.s}</div><div><b>Instructions:</b> ${x.i||'-'}</div><pre>${JSON.stringify(x.k||{},null,2)}</pre></div>`).join('')}
+ if(name==='agents'){const rows=await api('/api/agents',{headers:{}}); $('agentsList').innerHTML=rows.map(x=>`<div class='card'><b>${x.n}</b><div class='small muted'>${x.r}</div><div>${(x.sk||[]).join(', ')}</div></div>`).join('')}
+ if(name==='skills'){const skills=await api('/api/skills',{headers:{}}); $('statSkills').textContent=skills.length; $('skillsList').innerHTML=skills.map(s=>`<div class='card'><b>${s.name}</b><div class='small muted'>${s.type} · v${s.version} · ${s.source}</div><pre>${JSON.stringify(s.definition,null,2)}</pre></div>`).join(''); const sug=await api('/api/automations/suggestions',{headers:{}}); $('suggestionsList').innerHTML=sug.map(s=>`<div class='card'><b>${s.title}</b><div class='small muted'>Confidence ${(s.confidence*100).toFixed(0)}%</div><div>${s.description}</div><div class='row' style='margin-top:10px'><button onclick="approveSuggestion('${s.id}')">Approve as skill</button><button class='ghost' onclick="sendCmdFromSuggestion('${encodeURIComponent(s.title)}')">Run prompt</button></div></div>`).join('')||'<div class="small muted">No suggestions yet.</div>'}
+ if(name==='learning'){const g=await api('/api/learn/graph',{headers:{}}); $('graphBox').textContent=JSON.stringify(g,null,2)}
+ if(name==='devices'){const dev=await api('/api/devices',{headers:{}}); $('devicesList').innerHTML=dev.map(d=>`<div class='card'><b>${d.name}</b><div class='small muted'>${d.type} · ${d.status}</div><div>${(d.capabilities||[]).join(', ')}</div><div class='row' style='margin-top:10px'><button class='warn' onclick="deviceAction('${d.id}','wake')">Wake</button><button class='ghost' onclick="deviceAction('${d.id}','restart')">Restart</button><button class='red' onclick="deviceAction('${d.id}','shutdown')">Shutdown</button></div></div>`).join(''); $('statDevices').textContent=dev.filter(d=>d.online).length; const p=await api('/api/provider/status',{headers:{}}); $('providerPill').textContent='Provider: '+p.selected.provider; $('providerBox').textContent=JSON.stringify(p,null,2)}
+ if(name==='settings'){const s=await api('/api/settings',{headers:{}}); $('prov').value=s.PROVIDER; $('secondaryProv').value=s.SECONDARY_PROVIDER; $('tertiaryProv').value=s.TERTIARY_PROVIDER; $('model').value=s.MODEL; $('localUrl').value=s.LOCAL_URL; $('localModel').value=s.LOCAL_MODEL; $('execMode').value=s.EXECUTION_MODE; $('offline').checked=s.OFFLINE; $('autoApprove').checked=s.AUTO_APPROVE; $('dockerEnabled').checked=s.DOCKER_ENABLED; $('allowedOrigins').value=(s.ALLOWED_ORIGINS||[]).join(','); $('emailHost').value=s.EMAIL_HOST; $('emailPort').value=s.EMAIL_PORT; $('calendarId').value=s.CALENDAR_ID||'primary'; $('supabaseUrl').value=s.SUPABASE_URL||''; $('cloudRelayUrl').value=s.CLOUD_RELAY_URL||'';}
+}catch(e){console.error(e)}}
+async function loadPreview(){const id=$('previewTaskSelect').value;if(!id)return;const p=await api('/api/tasks/'+id+'/preview',{headers:{}}); $('previewPlan').textContent=JSON.stringify(p.preview||{},null,2); $('previewResult').textContent=typeof p.result==='string'?p.result:JSON.stringify(p.result,null,2)}
+function selectPreview(id){showTab('preview',document.querySelectorAll('.navbtn')[2]); $('previewTaskSelect').value=id; loadPreview()}
+async function approveTask(taskId){try{await api('/api/approve',{method:'POST',body:{task_id:taskId}}); refreshAll()}catch(e){alert(e.message)}}
+async function addProject(){try{await api('/api/projects',{method:'POST',body:{n:$('projName').value,i:$('projInst').value}}); $('projName').value=''; $('projInst').value=''; refreshSection('projects')}catch(e){alert(e.message)}}
+async function addAgent(){try{await api('/api/agents',{method:'POST',body:{n:$('agentName').value,r:$('agentRole').value,sk:$('agentSkills').value.split(',').map(x=>x.trim()).filter(Boolean)}}); $('agentName').value='';$('agentRole').value='';$('agentSkills').value='';refreshSection('agents')}catch(e){alert(e.message)}}
+async function addSkill(){try{const def=JSON.parse($('skillDef').value||'{}'); await api('/api/skills',{method:'POST',body:{name:$('skillName').value,description:$('skillDesc').value,skill_type:$('skillType').value,definition:def}}); $('skillName').value=$('skillDesc').value=$('skillDef').value=''; refreshSection('skills')}catch(e){alert('Skill error: '+e.message)}}
+async function approveSuggestion(id){try{await api('/api/automations/suggestions/'+id+'/approve',{method:'POST',body:{}}); refreshSection('skills')}catch(e){alert(e.message)}}
+function sendCmdFromSuggestion(text){$('cmd').value=decodeURIComponent(text);showTab('home',document.querySelectorAll('.navbtn')[0])}
+async function sendSearchToSkill(){const q=$('cmd').value.trim(); if(!q) return alert('Enter a search query in the command box first'); try{await api('/api/search-to-skill',{method:'POST',body:{query:q,notes:'Created from dashboard quick action'}}); refreshSection('skills'); log('Search converted into skill')}catch(e){alert(e.message)}}
+async function sendLearningEvent(){try{await api('/api/learn/event',{method:'POST',body:{source_device:$('learnDevice').value,source_type:isMobile?'phone':'desktop',event_type:$('learnType').value,content:$('learnContent').value,meta:{manual:true}}}); $('learnContent').value=''; refreshSection('learning')}catch(e){alert(e.message)}}
+async function addDevice(){try{await api('/api/devices',{method:'POST',body:{name:$('deviceName').value,device_type:$('deviceType').value,wol_mac:$('wolMac').value,relay_url:$('relayUrl').value,smart_plug_url:$('smartPlugUrl').value,amt_host:$('amtHost').value}}); $('deviceName').value=$('wolMac').value=$('relayUrl').value=$('smartPlugUrl').value=$('amtHost').value=''; refreshSection('devices')}catch(e){alert(e.message)}}
+async function deviceAction(id,action){try{const r=await api('/api/devices/'+id+'/control',{method:'POST',body:{action}}); alert(JSON.stringify(r,null,2)); refreshSection('devices')}catch(e){alert(e.message)}}
+async function saveSettings(){const payload={PROVIDER:$('prov').value,SECONDARY_PROVIDER:$('secondaryProv').value,TERTIARY_PROVIDER:$('tertiaryProv').value,MODEL:$('model').value,LOCAL_URL:$('localUrl').value,LOCAL_MODEL:$('localModel').value,EXECUTION_MODE:$('execMode').value,OFFLINE:$('offline').checked,AUTO_APPROVE:$('autoApprove').checked,DOCKER_ENABLED:$('dockerEnabled').checked,ALLOWED_ORIGINS:$('allowedOrigins').value.split(',').map(x=>x.trim()).filter(Boolean),API_KEY:$('apiKey').value,OPENAI_BASE_URL:$('openaiBase').value,WA_TOKEN:$('waToken').value,WA_PHONE:$('waPhone').value,TG_TOKEN:$('tgToken').value,EMAIL_USER:$('emailUser').value,EMAIL_PASS:$('emailPass').value,EMAIL_HOST:$('emailHost').value,EMAIL_PORT:$('emailPort').value,GOOGLE_SERVICE_ACCOUNT_JSON:$('googleJson').value,CALENDAR_ID:$('calendarId').value,SUPABASE_URL:$('supabaseUrl').value,SUPABASE_SERVICE_KEY:$('supabaseKey').value,CLOUD_RELAY_URL:$('cloudRelayUrl').value,PHONE_WAKE_SECRET:$('phoneWakeSecret').value}; try{await api('/api/settings',{method:'POST',body:payload}); alert('Settings saved'); ['apiKey','openaiBase','waToken','waPhone','tgToken','emailUser','emailPass','googleJson','supabaseKey','phoneWakeSecret'].forEach(id=>$(id).value=''); refreshSection('settings')}catch(e){alert(e.message)}}
+async function testIntegration(type){try{const res=await api('/api/test_int',{method:'POST',body:{type,to:$('testTo').value,sheet_id:$('calendarId').value,calendar_id:$('calendarId').value,data:[new Date().toISOString(),'AI CEO test row']}}); alert(JSON.stringify(res,null,2))}catch(e){alert(e.message)}}
+function toggleMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Use Chrome or Edge for speech recognition');return}if(listening){listening=false;rec&&rec.stop();$('voiceStatus').textContent='Idle';$('micBtn').classList.remove('live');return}rec=new SR();rec.continuous=true;rec.interimResults=false;rec.lang='en-US';rec.onstart=()=>{listening=true;$('voiceStatus').textContent='Listening';$('micBtn').classList.add('live')};rec.onresult=e=>{$('cmd').value=e.results[e.results.length-1][0].transcript;sendCmd()};rec.onend=()=>{if(listening){try{rec.start()}catch{}}else{$('voiceStatus').textContent='Idle';$('micBtn').classList.remove('live')}};rec.onerror=()=>{listening=false;$('voiceStatus').textContent='Mic error';$('micBtn').classList.remove('live')};rec.start()}
+async function speak(text){if(!isMobile) return; try{if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); const r=await fetch('/api/tts?text='+encodeURIComponent(text),{credentials:'include'}); const b=await r.arrayBuffer(); const buf=await audioCtx.decodeAudioData(b); const src=audioCtx.createBufferSource(); src.buffer=buf; src.connect(audioCtx.destination); src.start()}catch(e){console.warn(e)}}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/static/sw.js').catch(()=>{}))}
+loadAuth();
+</script>
+</body>
+</html>

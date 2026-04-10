@@ -1,0 +1,1 @@
+Load this folder as an unpacked extension in Chrome or Edge after logging into the AI CEO web app on the same host.

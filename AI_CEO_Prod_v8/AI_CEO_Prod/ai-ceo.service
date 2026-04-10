@@ -1,0 +1,14 @@
+[Unit]
+Description=AI CEO Production
+After=network.target docker.service
+
+[Service]
+WorkingDirectory=/opt/AI_CEO_Prod
+ExecStart=/opt/AI_CEO_Prod/venv/bin/python /opt/AI_CEO_Prod/main.py
+Restart=always
+User=www-data
+Group=www-data
+Environment=AI_CEO_ALLOWED_ORIGINS=https://your-domain.example
+
+[Install]
+WantedBy=multi-user.target

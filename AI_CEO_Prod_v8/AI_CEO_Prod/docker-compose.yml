@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  ai-ceo:
+    build: .
+    container_name: ai-ceo
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./instance:/app/instance
+      - ./captures:/app/captures
+      - ./ceo_platform.db:/app/ceo_platform.db
+    restart: unless-stopped
+    environment:
+      AI_CEO_ALLOWED_ORIGINS: http://127.0.0.1:8000,http://localhost:8000
+      AI_CEO_DOCKER_ENABLED: 'true'
